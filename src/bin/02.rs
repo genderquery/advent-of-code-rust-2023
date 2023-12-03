@@ -1,18 +1,31 @@
 advent_of_code::solution!(2);
 
-type Cube = (u32, String);
-type CubeSet = Vec<Cube>;
+struct CubeSet {
+    red: u32,
+    green: u32,
+    blue: u32,
+}
+
 type Bag = Vec<CubeSet>;
 type Game = (u32, Bag);
 
-fn parse_cube(s: &str) -> Cube {
-    let (qty, color) = s.split_once(' ').unwrap();
-    let qty: u32 = qty.parse().unwrap();
-    (qty, color.to_owned())
-}
-
 fn parse_cube_set(s: &str) -> CubeSet {
-    s.split(", ").map(parse_cube).collect()
+    let mut red = 0;
+    let mut green = 0;
+    let mut blue = 0;
+
+    for cube in s.split(", ") {
+        let (qty, color) = cube.split_once(' ').unwrap();
+        let qty = qty.parse().unwrap();
+        match color {
+            "red" => red = qty,
+            "green" => green = qty,
+            "blue" => blue = qty,
+            _ => panic!("invalid color"),
+        }
+    }
+
+    CubeSet { red, green, blue }
 }
 
 fn parse_bag(s: &str) -> Bag {
@@ -37,14 +50,9 @@ fn is_game_possible(game: &Game) -> Option<u32> {
     const BLUE_MAX: u32 = 14;
 
     let (game_id, bag) = game;
-    for set in bag {
-        for (qty, color) in set {
-            if (color == "red" && *qty > RED_MAX)
-                || (color == "green" && *qty > GREEN_MAX)
-                || (color == "blue" && *qty > BLUE_MAX)
-            {
-                return None;
-            }
+    for &CubeSet { red, green, blue } in bag {
+        if (red > RED_MAX) || (green > GREEN_MAX) || (blue > BLUE_MAX) {
+            return None;
         }
     }
 
@@ -57,16 +65,10 @@ fn power_of_game(game: &Game) -> u32 {
     let mut min_blue = 0;
     let (_, bag) = game;
 
-    for set in bag {
-        for (qty, color) in set {
-            if color == "red" {
-                min_red = std::cmp::max(min_red, *qty);
-            } else if color == "green" {
-                min_green = std::cmp::max(min_green, *qty);
-            } else if color == "blue" {
-                min_blue = std::cmp::max(min_blue, *qty);
-            }
-        }
+    for &CubeSet { red, green, blue } in bag {
+        min_red = std::cmp::max(min_red, red);
+        min_green = std::cmp::max(min_green, green);
+        min_blue = std::cmp::max(min_blue, blue);
     }
 
     min_red * min_green * min_blue
