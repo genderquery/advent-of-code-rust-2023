@@ -17,13 +17,11 @@ fn find_part_number(sch: &Schematic, row: usize, col: usize, cols: usize) -> u32
     while start_col > 0 && sch[row][start_col - 1].is_ascii_digit() {
         start_col -= 1;
     }
-    let mut end_col = col;
-    while end_col < cols && sch[row][end_col].is_ascii_digit() {
-        end_col += 1;
-    }
     let mut part_number = String::new();
-    for i_col in start_col..end_col {
+    let mut i_col = start_col;
+    while i_col < cols && sch[row][i_col].is_ascii_digit() {
         part_number.push(sch[row][i_col]);
+        i_col += 1;
     }
     part_number.parse().unwrap()
 }
