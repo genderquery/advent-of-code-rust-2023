@@ -1,33 +1,23 @@
 advent_of_code::solution!(4);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 struct Card {
-    num: usize,
-    winning: Vec<u32>,
-    picked: Vec<u32>,
+    num: u32,
+    points: u32,
+    matches: u32,
 }
 
-impl Card {
-    pub fn points(&self) -> u32 {
-        let mut points = 0;
-        for num in self.picked.iter() {
-            if self.winning.contains(num) {
-                if points == 0 {
-                    points = 1;
-                } else {
-                    points *= 2;
-                }
-            }
-        }
-        points
+fn card_points(winning: &[&str], picked: &[&str]) -> u32 {
+    let matches = card_matches(winning, picked);
+    if matches > 0 {
+        u32::pow(2, matches - 1)
+    } else {
+        0
     }
+}
 
-    pub fn matches(&self) -> usize {
-        self.picked
-            .iter()
-            .filter(|num| self.winning.contains(num))
-            .count()
-    }
+fn card_matches(winning: &[&str], picked: &[&str]) -> u32 {
+    picked.iter().filter(|num| winning.contains(num)).count() as u32
 }
 
 fn parse_cards(input: &str) -> Vec<Card> {
@@ -42,42 +32,35 @@ fn parse_cards(input: &str) -> Vec<Card> {
                 .parse()
                 .unwrap();
             let (winning, picked) = numbers.split_once('|').unwrap();
-            let winning: Vec<_> = winning
-                .split_ascii_whitespace()
-                .map(|s| s.parse().unwrap())
-                .collect();
-            let picked: Vec<_> = picked
-                .split_ascii_whitespace()
-                .map(|s| s.parse().unwrap())
-                .collect();
+            let winning: Vec<_> = winning.split_ascii_whitespace().collect();
+            let picked: Vec<_> = picked.split_ascii_whitespace().collect();
+            let points = card_points(&winning, &picked);
+            let matches = card_matches(&winning, &picked);
             Card {
                 num,
-                winning,
-                picked,
+                points,
+                matches,
             }
         })
         .collect()
 }
 
 pub fn part_one(input: &str) -> Option<String> {
-    let mut sum = 0;
-    for card in parse_cards(input) {
-        sum += card.points();
-    }
-
-    sum.to_string().into()
+    parse_cards(input)
+        .iter()
+        .map(|card| card.points)
+        .sum::<u32>()
+        .to_string()
+        .into()
 }
 
 pub fn part_two(input: &str) -> Option<String> {
-    let cards = parse_cards(input);
-    let mut cards: Vec<(usize, usize)> = cards
-        .iter()
-        .map(|card| (card.num, card.matches()))
-        .collect();
+    let mut cards = parse_cards(input);
     let mut pos = 0;
     while pos < cards.len() {
-        for i in 0..cards[pos].1 {
-            cards.push(cards[cards[pos].0 + i]);
+        for i in 0..cards[pos].matches {
+            let index = (cards[pos].num + i) as usize;
+            cards.push(cards[index]);
         }
         pos += 1;
     }
